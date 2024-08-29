@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"golang-ms/src/config"
-	"golang-ms/src/config/models"
+	"golang-ms/src/models"
 	"log"
 )
 
 type Main struct {
-	token     *models.PasetoAuth
-	config    *config.Config
+	Token     *models.PasetoAuth
+	Config    *config.Config
 	routerApi *fiber.App
 }
 
@@ -22,22 +22,18 @@ func newMain(c *config.Config, routerApi *fiber.App) (*Main, error) {
 	}
 
 	app := &Main{
-		token:     pasetoToken,
+		Token:     pasetoToken,
 		routerApi: routerApi,
-		config:    c,
+		Config:    c,
 	}
 
-	//app.SetApi()
+	app.SetApi()
 
 	return app, nil
 }
 
-func Start() string {
-	return ""
-}
-
 func (a *Main) Start() error {
-	return a.routerApi.Listen(a.config.Token.Address)
+	return a.routerApi.Listen(a.Config.Token.Address)
 }
 
 func main() {
@@ -48,7 +44,8 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("create app error:", err))
 	}
-	//app.SetApi()
-	log.Fatal(app.Start())
+	app.SetApi()
+	config.ConnectDB()
 
+	log.Fatal(app.Start())
 }
