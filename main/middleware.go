@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"golang-ms/src/models"
+	"golang-ms/src/service"
 	"strings"
 )
 
@@ -60,17 +61,23 @@ func (a *Main) Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	expectedPass, ok := models.Users[creds.Username]
-	if !ok || expectedPass != creds.Password {
+	userFound, err := service.FindByUsername(creds.Username)
+	pass, _ := service.GetHashPassword(creds.Password)
+	if err != nil || userFound.Password != pass {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad password or username"})
+	}
+
+	var roleNames []string
+	for _, role := range userFound.Roles {
+		roleNames = append(roleNames, role.Name)
 	}
 
 	pasetoToken, err := a.Token.NewToken(models.TokenData{
 		Subject:  "for user",
 		Duration: a.Config.Token.TokenDuration,
 		AdditionalClaims: models.AdditionalClaims{
-			Name: creds.Username,
-			Role: creds.Username,
+			Name: userFound.Username,
+			Role: roleNames,
 		},
 		Footer: models.Footer{MetaData: "footer for " + creds.Username},
 	})

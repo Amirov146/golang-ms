@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"golang-ms/src/models"
+	"golang-ms/src/service"
 	"io/ioutil"
 	"net/http"
 )
 
 func (a *Main) SetApi() {
 	a.routerApi.Post("/login", a.Login)
+	a.routerApi.Post("/createUser", service.CreateUser)
 
 	// example of
 	a.routerApi.Get("/all", func(c *fiber.Ctx) error {

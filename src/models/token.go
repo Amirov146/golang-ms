@@ -6,8 +6,8 @@ import (
 )
 
 type AdditionalClaims struct {
-	Name string `json:"name"`
-	Role string `json:"role"`
+	Name string   `json:"name"`
+	Role []string `json:"role"`
 }
 
 type Footer struct {

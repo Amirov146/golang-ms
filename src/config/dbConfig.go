@@ -21,6 +21,10 @@ func ConnectDB() {
 	if err != nil {
 		log.Fatal("Failed to connect to DB:", err)
 	}
+
+	DB.AutoMigrate(&models.Role{})
+	DB.AutoMigrate(&models.UsersRoles{})
 	DB.AutoMigrate(&models.User{})
 
+	DB.Exec("INSERT INTO roles (id, name) VALUES (?, ?), (?, ?)", 0, "USER", 1, "ADMIN")
 }

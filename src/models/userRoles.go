@@ -1,6 +1,10 @@
 package models
 
-type UserRole struct {
-	UserId float32 `json:"user_id"`
-	RoleId float32 `json:"role_id"`
+type UsersRolesID struct {
+	UserID uint `gorm:"column:user_id;primaryKey"`
+	RoleID uint `gorm:"column:role_id;primaryKey"`
+}
+
+type UsersRoles struct {
+	UsersRolesID UsersRolesID `gorm:"embedded;embeddedPrefix:"`
 }
