@@ -5,8 +5,8 @@ import "time"
 type User struct {
 	ID        uint   `json:"id" gorm:"primary_key;autoIncrement"`
 	Username  string `json:"username" gorm:"unique" binding:"required"`
-	FirstName string `json:"first_name" binding:"required"`
-	LastName  string `json:"last_name" binding:"required"`
+	FirstName string `json:"firstname" binding:"required"`
+	LastName  string `json:"lastname" binding:"required"`
 	Password  string `json:"password" binding:"required"`
 	Email     string `json:"email" gorm:"unique" binding:"required"`
 	CreatedAt time.Time

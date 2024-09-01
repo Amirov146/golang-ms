@@ -45,7 +45,16 @@ func main() {
 		panic(fmt.Errorf("create app error:", err))
 	}
 	app.SetApi()
-	config.ConnectDB()
+
+	//postgresql
+	config.ConnectPostgresDB()
+
+	//mongodb
+	config.ConnectMongoDB()
+	//defer config.DisconnectMongoDB()
+	//stop := make(chan os.Signal, 1)
+	//signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	//<-stop
 
 	log.Fatal(app.Start())
 }

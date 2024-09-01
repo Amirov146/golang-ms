@@ -10,10 +10,12 @@ import (
 )
 
 func (a *Main) SetApi() {
-	a.routerApi.Post("/login", a.Login)
-	a.routerApi.Post("/createUser", service.CreateUser)
 
-	// example of
+	//public routes
+	a.routerApi.Post("/login", a.Login)
+	a.routerApi.Post("/register", service.CreateUser)
+
+	// example of calling another microservice
 	a.routerApi.Get("/all", func(c *fiber.Ctx) error {
 		resp, err := http.Get("http://localhost:8082/all")
 		if err != nil {
@@ -29,25 +31,27 @@ func (a *Main) SetApi() {
 		return c.Send(body)
 	})
 
+	// protected routes
 	protectedApi := a.routerApi.Group("/api", a.CheckAuth())
+	{
+		protectedApi.Get("/account", func(c *fiber.Ctx) error {
 
-	protectedApi.Get("/account", func(c *fiber.Ctx) error {
+			val := c.Locals("claims")
 
-		val := c.Locals("claims")
+			v, ok := val.(*models.ServiceClaims)
 
-		v, ok := val.(*models.ServiceClaims)
+			if !ok {
+				return c.Status(fiber.StatusInternalServerError).
+					JSON(fiber.Map{"error": "type conversion error"})
+			}
 
-		if !ok {
-			return c.Status(fiber.StatusInternalServerError).
-				JSON(fiber.Map{"error": "type conversion error"})
-		}
+			fmt.Printf("%#v", v)
 
-		fmt.Printf("%#v", v)
+			owner := fmt.Sprintf("<h3>Account owner - %s</h3>", v.Name)
+			role := fmt.Sprintf("<h3>Account role - %s</h3>", v.Role)
+			footer := fmt.Sprintf("<h3>Account footer - %s</h3>", v.MetaData)
 
-		owner := fmt.Sprintf("<h3>Account owner - %s</h3>", v.Name)
-		role := fmt.Sprintf("<h3>Account role - %s</h3>", v.Role)
-		footer := fmt.Sprintf("<h3>Account footer - %s</h3>", v.MetaData)
-
-		return c.SendString(owner + role + footer)
-	})
+			return c.SendString(owner + role + footer)
+		})
+	}
 }

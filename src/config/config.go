@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Postgres PostgresConfig `json:"postgres"`
 	Token    TokenConfig    `json:"token"`
+	MongoDB  MongoDbConfig  `json:"mongodb"`
 }
 
 type PostgresConfig struct {
@@ -26,8 +27,17 @@ type TokenConfig struct {
 	Address       string        `json:"address"`
 }
 
+type MongoDbConfig struct {
+	Host        string `json:"host"`
+	Port        string `json:"port"`
+	Database    string `json:"database"`
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	MaxPoolSize int    `json:"maxPoolSize"`
+}
+
 func LoadConfig() *Config {
-	viper.AddConfigPath("conf")
+	viper.AddConfigPath("conf-json")
 	viper.SetConfigName("config-dev.json")
 	viper.SetConfigType("json")
 

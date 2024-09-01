@@ -11,6 +11,13 @@
     "tokenKey" : "000f3e5799296cc4ce32c444cfde4962",
     "tokenDuration" : "1h",
     "address" : "localhost:4444"
+  },
+  "mongodb": {
+    "database": "tokens",
+    "host": "localhost",
+    "user": "mongo",
+    "password": "mongo",
+    "maxPoolSize": 50,
+    "port": "27017"
   }
-
 }

@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang-ms/src/config"
 	"golang-ms/src/models"
 	"golang-ms/src/service"
+	"golang.org/x/crypto/bcrypt"
 	"strings"
+	"time"
 )
 
 const (
@@ -17,6 +23,7 @@ const (
 var (
 	ErrMissingAuthHeader = errors.New("authorization header is missing")
 	ErrInvalidAuthHeader = errors.New("invalid authorization header")
+	ctx                  = context.Background()
 )
 
 func (a *Main) CheckAuth() fiber.Handler {
@@ -54,6 +61,18 @@ func (a *Main) CheckAuth() fiber.Handler {
 	}
 }
 
+func SaveTokenToMongo(token string, username string, expirationTime int64) error {
+	ctx := context.Background()
+
+	_, err := config.TokenCollection.UpdateOne(
+		ctx,
+		bson.M{"username": username},
+		bson.M{"$set": bson.M{"token": token, "expiresAt": expirationTime}}, // Обновляем токен и срок действия
+		options.Update().SetUpsert(true),
+	)
+	return err
+}
+
 func (a *Main) Login(c *fiber.Ctx) error {
 	var creds models.Credentials
 
@@ -62,8 +81,8 @@ func (a *Main) Login(c *fiber.Ctx) error {
 	}
 
 	userFound, err := service.FindByUsername(creds.Username)
-	pass, _ := service.GetHashPassword(creds.Password)
-	if err != nil || userFound.Password != pass {
+	passError := bcrypt.CompareHashAndPassword([]byte(userFound.Password), []byte(creds.Password))
+	if err != nil || passError != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad password or username"})
 	}
 
@@ -84,6 +103,12 @@ func (a *Main) Login(c *fiber.Ctx) error {
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	expirationTime := time.Now().Add(a.Config.Token.TokenDuration).Unix()
+	err = SaveTokenToMongo(pasetoToken, userFound.Username, expirationTime)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cache saving error"})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"token": pasetoToken})
