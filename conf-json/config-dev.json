@@ -7,9 +7,14 @@
     "database" : "marvel",
     "sslMode": "disable"
   },
-  "token" : {
+  "accessToken" : {
     "tokenKey" : "000f3e5799296cc4ce32c444cfde4962",
     "tokenDuration" : "1h",
+    "address" : "localhost:4444"
+  },
+  "refreshToken" : {
+    "tokenKey" : "000f3e5799296cc4ce32c444cfde4962",
+    "tokenDuration" : "24h",
     "address" : "localhost:4444"
   },
   "mongodb": {

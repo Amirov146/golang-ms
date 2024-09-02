@@ -67,10 +67,31 @@ func SaveTokenToMongo(token string, username string, expirationTime int64) error
 	_, err := config.TokenCollection.UpdateOne(
 		ctx,
 		bson.M{"username": username},
-		bson.M{"$set": bson.M{"token": token, "expiresAt": expirationTime}}, // Обновляем токен и срок действия
+		bson.M{"$set": bson.M{"token": token, "expiresAt": expirationTime}},
 		options.Update().SetUpsert(true),
 	)
 	return err
+}
+
+func (a *Main) RoleBasedAuth(requiredRole string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		val := c.Locals("claims")
+		claims, ok := val.(*models.ServiceClaims)
+
+		if !ok {
+			return c.Status(fiber.StatusInternalServerError).
+				JSON(fiber.Map{"error": "type conversion error"})
+		}
+
+		for _, role := range claims.Role {
+			if role == requiredRole {
+				return c.Next()
+			}
+		}
+
+		return c.Status(fiber.StatusForbidden).
+			JSON(fiber.Map{"error": "insufficient permissions"})
+	}
 }
 
 func (a *Main) Login(c *fiber.Ctx) error {
@@ -93,7 +114,7 @@ func (a *Main) Login(c *fiber.Ctx) error {
 
 	pasetoToken, err := a.Token.NewToken(models.TokenData{
 		Subject:  "for user",
-		Duration: a.Config.Token.TokenDuration,
+		Duration: a.Config.AccessToken.TokenDuration,
 		AdditionalClaims: models.AdditionalClaims{
 			Name: userFound.Username,
 			Role: roleNames,
@@ -105,7 +126,7 @@ func (a *Main) Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	expirationTime := time.Now().Add(a.Config.Token.TokenDuration).Unix()
+	expirationTime := time.Now().Add(a.Config.AccessToken.TokenDuration).Unix()
 	err = SaveTokenToMongo(pasetoToken, userFound.Username, expirationTime)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cache saving error"})

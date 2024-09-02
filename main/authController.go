@@ -15,43 +15,42 @@ func (a *Main) SetApi() {
 	a.routerApi.Post("/login", a.Login)
 	a.routerApi.Post("/register", service.CreateUser)
 
-	// example of calling another microservice
-	a.routerApi.Get("/all", func(c *fiber.Ctx) error {
-		resp, err := http.Get("http://localhost:8082/all")
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
+	a.routerApi.Get("/account", func(c *fiber.Ctx) error {
 
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
+		val := c.Locals("claims")
+
+		v, ok := val.(*models.ServiceClaims)
+
+		if !ok {
+			return c.Status(fiber.StatusInternalServerError).
+				JSON(fiber.Map{"error": "type conversion error"})
 		}
 
-		return c.Send(body)
+		fmt.Printf("%#v", v)
+
+		owner := fmt.Sprintf("<h3>Account owner - %s</h3>", v.Name)
+		role := fmt.Sprintf("<h3>Account role - %s</h3>", v.Role)
+		footer := fmt.Sprintf("<h3>Account footer - %s</h3>", v.MetaData)
+
+		return c.SendString(owner + role + footer)
 	})
 
 	// protected routes
 	protectedApi := a.routerApi.Group("/api", a.CheckAuth())
 	{
-		protectedApi.Get("/account", func(c *fiber.Ctx) error {
+		protectedApi.Get("/all", a.RoleBasedAuth("ADMIN"), func(c *fiber.Ctx) error {
+			resp, err := http.Get("http://localhost:8082/all")
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
 
-			val := c.Locals("claims")
-
-			v, ok := val.(*models.ServiceClaims)
-
-			if !ok {
-				return c.Status(fiber.StatusInternalServerError).
-					JSON(fiber.Map{"error": "type conversion error"})
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return err
 			}
 
-			fmt.Printf("%#v", v)
-
-			owner := fmt.Sprintf("<h3>Account owner - %s</h3>", v.Name)
-			role := fmt.Sprintf("<h3>Account role - %s</h3>", v.Role)
-			footer := fmt.Sprintf("<h3>Account footer - %s</h3>", v.MetaData)
-
-			return c.SendString(owner + role + footer)
+			return c.Send(body)
 		})
 	}
 }

@@ -16,7 +16,7 @@ type Main struct {
 
 func newMain(c *config.Config, routerApi *fiber.App) (*Main, error) {
 
-	pasetoToken, err := models.NewPaseto([]byte(c.Token.TokenKey))
+	pasetoToken, err := models.NewPaseto([]byte(c.AccessToken.TokenKey))
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func newMain(c *config.Config, routerApi *fiber.App) (*Main, error) {
 }
 
 func (a *Main) Start() error {
-	return a.routerApi.Listen(a.Config.Token.Address)
+	return a.routerApi.Listen(a.Config.AccessToken.Address)
 }
 
 func main() {

@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	Postgres PostgresConfig `json:"postgres"`
-	Token    TokenConfig    `json:"token"`
-	MongoDB  MongoDbConfig  `json:"mongodb"`
+	Postgres     PostgresConfig     `json:"postgres"`
+	AccessToken  AccessTokenConfig  `json:"accessToken"`
+	RefreshToken RefreshTokenConfig `json:"refreshToken"`
+	MongoDB      MongoDbConfig      `json:"mongodb"`
 }
 
 type PostgresConfig struct {
@@ -21,7 +22,13 @@ type PostgresConfig struct {
 	SSLMode  string `json:"sslMode"`
 }
 
-type TokenConfig struct {
+type AccessTokenConfig struct {
+	TokenKey      string        `json:"tokenKey"`
+	TokenDuration time.Duration `json:"tokenDuration"`
+	Address       string        `json:"address"`
+}
+
+type RefreshTokenConfig struct {
 	TokenKey      string        `json:"tokenKey"`
 	TokenDuration time.Duration `json:"tokenDuration"`
 	Address       string        `json:"address"`
